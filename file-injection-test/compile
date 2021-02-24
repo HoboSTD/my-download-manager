@@ -1,0 +1,5 @@
+#!/bin/sh
+
+gcc injection.c -o injection
+gcc payload.c -o payload
+cat payload >> injection
