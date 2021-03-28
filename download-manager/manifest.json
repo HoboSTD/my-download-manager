@@ -1,0 +1,14 @@
+{
+    "name": "My Download Manager",
+    "description": "A download manager that is better than the default one.",
+    "version": "1.0",
+    "manifest_version": 3,
+    "permissions": ["downloads"],
+    "action": {
+        "default_popup": "downloader.html",
+        "default_css": "downloader.css"
+    },
+    "background": {
+        "service_worker": "downloader.js"
+    }
+}
