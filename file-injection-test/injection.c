@@ -1,4 +1,4 @@
-// A proof-of-concept of a method to 'inject' malicious code into a binary.
+// This program can execute malicious code before letting a normal program run.
 #include<stdio.h>
 #include<stdlib.h>
 #include<sys/types.h>
@@ -6,17 +6,15 @@
 #include<fcntl.h>
 #include<unistd.h>
 
-#define PLD_BIN "payload"
-#define IJN_BIN "injection"
 #define IJN_NBYTES 17464
 #define PLD_NBYTES 20000
 
 char*
-read_payload_binary(ssize_t* nbytes)
+read_payload_binary(char* path, ssize_t* nbytes)
 {
-    int fd = open(IJN_BIN, O_RDONLY);
+    int fd = open(path, O_RDONLY);
     if (fd < 0) {
-        fprintf(stderr, "Couldn't open "IJN_BIN".\n");
+        fprintf(stderr, "Couldn't open the payload.\n");
         exit(1);
     }
 
@@ -37,18 +35,18 @@ read_payload_binary(ssize_t* nbytes)
 }
 
 void
-replace_with_payload(char* payload, ssize_t nbytes_payload)
+replace_with_payload(char* path, char* payload, ssize_t nbytes_payload)
 {
-    remove(IJN_BIN);
+    remove(path);
 
-    int fd = creat(IJN_BIN, S_IRWXU | S_IRWXG | S_IRWXO);
+    int fd = creat(path, S_IRWXU | S_IRWXG | S_IRWXO);
     if (fd < 0) {
-        fprintf(stderr, "Couldn't open "IJN_BIN".\n");
+        fprintf(stderr, "Couldn't open file.\n");
         exit(1);
     }
     close(fd);
 
-    fd = open(IJN_BIN, O_WRONLY);
+    fd = open(path, O_WRONLY);
     lseek(fd, 0, SEEK_SET);
     ssize_t bytes_wrote = write(fd, payload, nbytes_payload);
     if (bytes_wrote <= 0) {
@@ -59,33 +57,33 @@ replace_with_payload(char* payload, ssize_t nbytes_payload)
 }
 
 void
-remove_injection_binary(void)
+remove_injection_binary(char* path)
 {
     ssize_t nbytes_payload = 0;
 
-    char* payload = read_payload_binary(&nbytes_payload);
+    char* payload = read_payload_binary(path, &nbytes_payload);
 
-    replace_with_payload(payload, nbytes_payload);
+    replace_with_payload(path, payload, nbytes_payload);
 
     free(payload);
 }
 
 void
-run_payload(void)
+run_payload(char* path)
 {
     char* newargv[] = { NULL };
     char* newenviron[] = { NULL };
-    execve(IJN_BIN, newargv, newenviron);
+    execve(path, newargv, newenviron);
 }
 
 int
-main(void)
+main(int arc, char* argv[])
 {
     printf("This could be some malicious code!\n");
 
-    remove_injection_binary();
+    remove_injection_binary(argv[0]);
 
-    run_payload();
+    run_payload(argv[0]);
 
     exit(1);
 }
