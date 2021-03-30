@@ -1,3 +1,8 @@
-html {
-    background-color: grey;
+body {
+    background: #fff;
+    color: black;
+    font-size: 14px;
+    padding: 3px;
+    min-width: 400px;
+    min-height: 200px;
 }
