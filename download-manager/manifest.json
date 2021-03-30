@@ -5,10 +5,14 @@
     "manifest_version": 3,
     "permissions": ["downloads"],
     "action": {
-        "default_popup": "downloader.html",
-        "default_css": "downloader.css"
+        "default_popup": "popup.html",
+        "default_css": "popup.css"
     },
-    "background": {
-        "service_worker": "downloader.js"
-    }
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["jquery-2.2.0.min.js", "downloader.js"],
+            "run_at": "document_end"
+        }
+    ]
 }
