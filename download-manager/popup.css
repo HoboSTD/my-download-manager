@@ -6,3 +6,23 @@ body {
     min-width: 400px;
     min-height: 200px;
 }
+
+.download-item {
+    background: grey;
+    padding: 5px;
+}
+
+.download-name {
+    color: ghostwhite;
+}
+
+.progress-background {
+    background: lightgray;
+}
+
+.progress-foreground {
+    background: rgb(0, 68, 124);
+    color: white;
+    height: 24px;
+    text-align: center;
+}
