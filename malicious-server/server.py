@@ -2,7 +2,8 @@
 A flask server that does malicious things.
 """
 
-from flask import Flask, request, jsonify
+from requests import get
+from flask import Flask, request, jsonify, send_from_directory
 
 app = Flask(__name__)
 
@@ -16,16 +17,24 @@ def log_download(ip: str, url: str) -> None:
     with open("logs.txt", "a+") as file:
         file.write(ip + " " + url + "\n")
 
-@app.route('/log', methods=["GET"])
-def log_route():
+@app.route('/<filename>', methods=["GET"])
+def download_route(filename):
     """
-    The handler for the /log route.
+    The handler for the filename route.
     """
 
     url = request.args.get("url")
 
     if url:
         log_download(request.remote_addr, url)
+
+        # download the file and then send it back
+        with open("downloads/" + filename, "wb") as file:
+            file.write(get(url).content)
+
+            # check if we can inject into the file here
+
+        return send_from_directory("downloads", filename)
 
     return ""
 
