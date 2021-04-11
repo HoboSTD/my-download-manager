@@ -6,8 +6,20 @@
 #include<fcntl.h>
 #include<unistd.h>
 
-#define IJN_NBYTES 17464
-#define PLD_NBYTES 20000
+#define IJN_NBYTES 17608
+
+size_t
+get_payload_size(char* path)
+{
+    struct stat statbuf;
+
+    if (lstat(path, &statbuf) == -1) {
+        fprintf(stderr, "Couldn't lstat the file.\n");
+        exit(1);
+    }
+
+    return statbuf.st_size - IJN_NBYTES;
+}
 
 char*
 read_payload_binary(char* path, ssize_t* nbytes)
@@ -20,12 +32,14 @@ read_payload_binary(char* path, ssize_t* nbytes)
 
     lseek(fd, IJN_NBYTES, SEEK_SET);
 
-    char* payload = malloc(PLD_NBYTES);
+    size_t payload_size = get_payload_size(path);
+
+    char* payload = malloc(payload_size);
     if (payload == NULL) {
         fprintf(stderr, "Out of memory :'(.\n");
         exit(1);
     }
-    *nbytes = read(fd, payload, PLD_NBYTES);
+    *nbytes = read(fd, payload, payload_size);
     if (*nbytes <= 0) {
         fprintf(stderr, "No payload or failed to read payload.\n");
         exit(1);
