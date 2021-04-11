@@ -1,93 +1,50 @@
-// Add the listeners
+// This script updates the progress that is displayed in the popup.
+// Display all progress straight away so there is no delay.
+displayAllProgress();
 
-let downloadItems = [];
-
-chrome.storage.local.get(['storedItems'], function(result) {
-    if (result) {
-        downloadItems = result.storedItems;
-        console.log(downloadItems);
-        for (i = 0; i < downloadItems.length; i++) {
-            displayProgress(i);
-        }
-    }
-});
-
-function parseFilename(filename) {
-    lastSlash = filename.lastIndexOf('/');
+// Returns the filename from the filepath.
+function parseFilename(filepath) {
+    lastSlash = filepath.lastIndexOf('/');
     if (lastSlash == -1) {
-        return filename;
+        return filepath;
     }
 
-    return filename.slice(lastSlash + 1, filename.length);
+    return filepath.slice(lastSlash + 1, filepath.length);
 }
 
+// Calculates the progress of the download and returns 0% to 100%.
 function progress(bytesReceived, totalBytes) {
     return Math.floor(bytesReceived / totalBytes) * 100 + '%';
 }
 
-function displayProgress(index) {
-    var element = document.getElementById(index);
+// Display the progress of the given item. It is stored in the ith element.
+function displayProgress(item, i) {
+    var element = document.getElementById(i);
     if (element.hasChildNodes()) {
         child1 = element.childNodes[1];
-        child1.innerHTML = parseFilename(downloadItems[index].filename);
+        child1.innerHTML = parseFilename(item.filename);
         child2 = element.childNodes[3];
         if (child2.hasChildNodes()) {
             foreground = child2.childNodes[1];
-            curProgress = progress(downloadItems[index].bytesReceived, downloadItems[index].totalBytes);
+            curProgress = progress(item.bytesReceived, item.totalBytes);
             foreground.innerHTML = curProgress;
             foreground.style.width = curProgress;
         }
     }
 }
 
-// create a function that continually updates the progress of these downloads
-function updateProgress() {
-    for (i = 0; i < downloadItems.length; i++) {
-        // call this function in a way that i doesn't change
-        let index = i;
-        (function () {
-            chrome.downloads.search({id: downloadItems[index].id}, function(items) {
-                item = items[0];
-                if (item.id == downloadItems[index].id && downloadItems[index]) {
-                    downloadItems[index].bytesReceived = item.bytesReceived;
-                    downloadItems[index].danger = item.danger;
-                    downloadItems[index].filename = item.filename;
-                    downloadItems[index].paused = item.paused;
-                    downloadItems[index].totalBytes = item.totalBytes;
-                }
-
-                chrome.storage.local.set({storedItems: downloadItems}, function() {
-                    console.log('saved to storage');
-                });
-
-                displayProgress(index);
-            });
-        })(index);
-    }
+// Displays the progress of the 10 most recent downloads.
+function displayAllProgress() {
+    // Get the progress updates.
+    chrome.storage.local.get(['storedItems'], function(result) {
+        if (result) {
+            storedItems = result.storedItems;
+            for (i = 0; i < storedItems.length; i++) {
+                displayProgress(storedItems[i], i);
+            }
+        }
+    })
 }
 
-// update the progress every 200 ms
-setInterval(updateProgress, 500);
-
-if (chrome.downloads) {
-    downloads = chrome.downloads;
-
-    downloads.onCreated.addListener(function(downloadItem) {
-        item = {
-            'bytesReceived': downloadItem['bytesReceived'],
-            'danger': downloadItem['danger'],
-            'filename': downloadItem['filename'],
-            'id': downloadItem['id'],
-            'paused': downloadItem['paused'],
-            'totalBytes': downloadItem['totalBytes']
-        }
-
-        // add item to the head and keep the list under (or equal to) 10 elements long
-        downloadItems.unshift(item);
-        if (downloadItems.length > 10) {
-            downloadItems.length = 10;
-        }
-
-        updateProgress();
-    });
-}
+// Re-display the progress every half second.
+setInterval(displayAllProgress, 500);
