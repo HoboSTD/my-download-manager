@@ -3,10 +3,14 @@
     "description": "A download manager that is better than the default one.",
     "version": "1.0",
     "manifest_version": 3,
-    "permissions": ["downloads"],
+    "permissions": ["downloads", "storage"],
+    "background": {
+        "service_worker": "background.js"
+    },
     "action": {
         "default_popup": "popup.html",
-        "default_css": "popup.css"
+        "default_css": "popup.css",
+        "default_js": "popup.js"
     },
     "content_scripts": [
         {
