@@ -137,3 +137,12 @@ dmypy.json
 malicious-server/logs.txt
 
 **/__pycache__
+
+## C# files
+
+exe-injection/
+hello-world-csharp/
+
+
+## vscode
+.vscode/
