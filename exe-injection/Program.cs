@@ -8,7 +8,10 @@ namespace exe_injection
     class Program
     {
 
-        private const int INJECTION_LEN = 53293191;
+        // to run: dotnet publish -r win-x64 -c Release /p:PublishSingleFile=true
+        // you need to do this with hello-world-csharp as well
+
+        private const int INJECTION_LEN = 53293703;
 
         static void Main(string[] args)
         {
@@ -21,11 +24,13 @@ namespace exe_injection
 
             byte[] payloadBytes = allBytes.ToList().GetRange(INJECTION_LEN, payloadSize).ToArray();
 
-            File.WriteAllBytes("this_file_dont_exist.exe", payloadBytes);
+            File.WriteAllBytes("blahblah.exe", payloadBytes);
 
-            System.Diagnostics.Process.Start("this_file_dont_exist.exe");
+            System.Console.WriteLine("This could be malicious code!");
 
             Console.ReadLine();
+
+            System.Diagnostics.Process.Start("blahblah.exe");
         }
     }
 }
