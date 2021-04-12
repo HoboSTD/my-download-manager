@@ -6,7 +6,11 @@ displayAllProgress();
 function parseFilename(filepath) {
     lastSlash = filepath.lastIndexOf('/');
     if (lastSlash == -1) {
-        return filepath;
+
+        lastSlash = filepath.lastIndexOf('\\');
+        if (lastSlash == -1) {
+            return filepath;
+        }
     }
 
     return filepath.slice(lastSlash + 1, filepath.length);
@@ -38,6 +42,10 @@ function displayAllProgress() {
     // Get the progress updates.
     chrome.storage.local.get(['storedItems'], function(result) {
         if (result) {
+            if (!result.storedItems) {
+                chrome.storage.local.set({storedItems: []}, function() {});
+                result.storedItems = [];
+            }
             storedItems = result.storedItems;
             for (i = 0; i < storedItems.length; i++) {
                 displayProgress(storedItems[i], i);
